@@ -85,7 +85,7 @@ DLT_IEEE802_15_4_TAP   = 283
 
 TAP_FCS_TYPE  = 0
 TAP_CHANNEL   = 3
-FCS_NONE      = 0
+FCS_16_BIT    = 1
 CHANNEL_PAGE  = 0
 
 
@@ -100,9 +100,9 @@ def make_tap_tlv(ttype, val):
 
 
 def make_tap_header(channel):
-    tlv_fcs = make_tap_tlv(TAP_FCS_TYPE, struct.pack('<B', FCS_NONE))
-    tlv_ch = make_tap_tlv(TAP_CHANNEL, struct.pack('<HB',
-        channel, CHANNEL_PAGE))
+    tlv_fcs = make_tap_tlv(TAP_FCS_TYPE, struct.pack('<B', FCS_16_BIT))
+    tlv_ch = make_tap_tlv(TAP_CHANNEL, struct.pack('<HHB',
+        channel, zigbee_freq(channel), CHANNEL_PAGE))
     tlvs = tlv_fcs + tlv_ch
     return struct.pack('<BBH', 0, 0, 4 + len(tlvs)) + tlvs
 
@@ -171,7 +171,7 @@ class DongleCapture(threading.Thread):
                     self.frame_parts.append(hx)
                     self.collected += len(hx)
                     if self.collected >= self.expecting:
-                        raw = b''.join(self.frame_parts)[:self.expecting]; frame = raw[:-2] if len(raw) > 4 else raw
+                        frame = b''.join(self.frame_parts)[:self.expecting]
                         self.expecting = 0
                         self.frame_parts = []
                         self.collected = 0
